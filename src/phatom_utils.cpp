@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <time.h>
 
 void print_phantom(Phantom* phantom){
     for (int i = 0 ; i < phantom->getH(); i++){
@@ -14,7 +15,7 @@ void print_phantom(Phantom* phantom){
 
 void save_data(Phantom* phantom){
     char filename[64];
-    sprintf(filename, "phantoms/data/data_%d.txt", rand() % 10000);
+    sprintf(filename, "phantoms/data/data_%d.txt", time(0));
 
     FILE* f = fopen(filename, "w");
     if (!f) return;
@@ -36,7 +37,7 @@ void save_data(Phantom* phantom){
 
 void save_image(Phantom* phantom){
     char filename[64];
-    sprintf(filename, "phantoms/pics/pic_%d.bmp", rand() % 10000);
+    sprintf(filename, "phantoms/pics/pic_%d.bmp", time(0));
 
     FILE* f = fopen(filename, "wb");
     if (!f) return;
