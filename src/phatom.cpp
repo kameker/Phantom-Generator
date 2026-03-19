@@ -26,7 +26,6 @@ Phantom::Phantom(int w, int h, double delta,
     for (int i = 0; i < h; i++) {
         this->phantom_data[i] = new double[w];
     }
-    this->dataline = new double[w]();
     this->centerX = WIDTH / 2;
     this->centerY = HEIGHT / 2;
 }
@@ -35,10 +34,8 @@ Phantom::~Phantom(){
         delete[] this->phantom_data[i];
     }
     delete[] this->phantom_data;
-    delete[] this->dataline;
 }
 void Phantom::generate_phantom(){
-    // Очистка данных
     for (int i = 0; i < this->HEIGHT; i++) {
         for (int j = 0; j < this->WIDTH; j++) {
             this->phantom_data[i][j] = 0.0;
@@ -55,7 +52,6 @@ void Phantom::generate_phantom(){
     if (this->smothingSigma > 0){
         setGausBlur(this->smothingSigma);
     }
-    compute_dataline();
 }
 
 int Phantom::rand_radius(){
@@ -140,18 +136,8 @@ void Phantom::setGausBlur(double sigma){
     this->phantom_data = result;
 }
 
-void Phantom::compute_dataline(){
-    for (int x = 0; x < this->WIDTH; x++) {
-        double sum = 0.0;
-        for (int y = 0; y < this->HEIGHT; y++) {
-            sum += this->phantom_data[y][x];
-        }
-        this->dataline[x] = sum / this->HEIGHT;
-    }
-}
-
 double* Phantom::get_dataline(){
-    return this->dataline;
+    return this->phantom_data[300];
 }
 
 double** Phantom::get_phantom_data(){

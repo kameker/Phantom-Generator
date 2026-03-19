@@ -1,7 +1,5 @@
 #include "phatom_utils.hpp"
 #include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
 #include <time.h>
 
 void print_phantom(Phantom* phantom){
@@ -24,10 +22,9 @@ void save_data(Phantom* phantom){
     int w = phantom->getW();
     double** data = phantom->get_phantom_data();
 
-    fprintf(f, "%d %d\n", w, h);
     for (int i = 0; i < h; i++) {
         for (int j = 0; j < w; j++) {
-            fprintf(f, "%0.1f ", data[i][j]);
+            fprintf(f, "%0.2f ", data[i][j]);
         }
         fprintf(f, "\n");
     }
@@ -83,10 +80,9 @@ void save_image(Phantom* phantom){
     unsigned char* row = new unsigned char[rowSize];
     for (int y = h - 1; y >= 0; y--) {
         for (int x = 0; x < w; x++) {
-            BYTE val = (BYTE)(data[y][x] * 255);
-            row[x * 3 + 0] = val;
-            row[x * 3 + 1] = val;
-            row[x * 3 + 2] = val;
+            row[x * 3 + 0] = (data[y][x] * 255);
+            row[x * 3 + 1] = (data[y][x] * 255);
+            row[x * 3 + 2] = (data[y][x] * 255);
         }
         fwrite(row, 1, rowSize, f);
     }
