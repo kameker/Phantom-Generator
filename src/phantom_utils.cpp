@@ -1,6 +1,8 @@
-#include "phatom_utils.hpp"
+#include "phantom_utils.hpp"
 #include <stdio.h>
 #include <time.h>
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 void print_phantom(Phantom* phantom){
     for (int i = 0 ; i < phantom->getH(); i++){
@@ -90,3 +92,4 @@ void save_image(Phantom* phantom){
 
     fclose(f);
 }
+

@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++17 -O2 -I include
 LDFLAGS_WIN = -static -lgdi32 -o phantom.exe
 LDFLAGS_LINUX = -static -lgdi32 -o phantom
 
-SRCS = src/main.cpp src/phatom.cpp src/phatom_utils.cpp
+SRCS = src/main.cpp src/phantom.cpp src/phantom_utils.cpp src/sinogram.cpp
 TARGET = image_generator.exe
 
 .PHONY: all build buildlinux run clean

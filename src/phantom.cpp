@@ -1,4 +1,4 @@
-#include "phatom.hpp"
+#include "phantom.hpp"
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

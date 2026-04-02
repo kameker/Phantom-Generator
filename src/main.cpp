@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
-#include "phatom.hpp"
-#include "phatom_utils.hpp"
+#include "phantom.hpp"
+#include "phantom_utils.hpp"
+#include "sinogram.hpp"
 
 #define WINDOW_WIDTH 1920
 #define WINDOW_HEIGHT 1080
@@ -20,6 +21,8 @@
 HWND hwndImage1 = nullptr;
 HWND hwndImage2 = nullptr;
 HWND hwndBtn1 = nullptr;
+HWND hwndBtnSinogram = nullptr;
+HWND hwndBtnGraph = nullptr;
 Phantom* g_phantom = nullptr;
 
 // Поля ввода параметров
@@ -39,12 +42,13 @@ void drawPhantom(HWND hwnd, Phantom* phantom) {
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             int idx = (y * w + x) * 4;
-            BYTE alpha = (BYTE)(data[y][x] * 255);
+            BYTE alpha = (BYTE)(data[y][x] * 100);
             // Цвет фона - белый (255), смешиваем с альфой
+
             pixels[idx] = alpha;     // B
             pixels[idx+1] = alpha;   // G
             pixels[idx+2] = alpha;   // R
-            pixels[idx+3] = 255;     // A (всегда непрозрачный)
+            pixels[idx+3] = 255;    // A (всегда непрозрачный)
         }
     }
 
@@ -62,6 +66,64 @@ void drawPhantom(HWND hwnd, Phantom* phantom) {
     ReleaseDC(hwnd, hdc);
 }
 
+void drawSinusogram(HWND hwnd, Phantom* phantom){
+    const int NPHYS = 360;
+    const int NCSYS = 256;
+
+    Sinogram* sino = new Sinogram(phantom, 0, 0, NPHYS, NCSYS);
+    sino->set_sinogram();
+
+    HDC hdc = GetDC(hwnd);
+    int w = IMAGE_WIDTH;
+    int h = IMAGE_HEIGHT;
+
+    // Масштабирование: синограмма NPHYS x NCSYS -> окно w x h
+    int sinoW = NCSYS;
+    int sinoH = NPHYS;
+    double** data = sino->get_sinogram();
+
+    // Находим мин/макс для нормализации
+    double minVal = data[0][0], maxVal = data[0][0];
+    for (int i = 0; i < sinoH; i++){
+        for (int j = 0; j < sinoW; j++){
+            if (data[i][j] < minVal) minVal = data[i][j];
+            if (data[i][j] > maxVal) maxVal = data[i][j];
+        }
+    }
+    double range = maxVal - minVal;
+    if (range < 0.001) range = 1.0;
+
+    // Подготовка буфера пикселей (BGRA формат)
+    BYTE* pixels = new BYTE[w * h * 4];
+    for (int i = 0; i < h; i++){
+        int sinoY = (sinoH - 1) - (i * sinoH / h);
+        for (int j = 0; j < w; j++){
+            int sinoX = j * sinoW / w;
+            double val = data[sinoY][sinoX];
+            BYTE color = (BYTE)((val - minVal) / range * 255);
+            int idx = (i * w + j) * 4;
+            pixels[idx] = color;       // B
+            pixels[idx + 1] = color;   // G
+            pixels[idx + 2] = color;   // R
+            pixels[idx + 3] = 255;     // A
+        }
+    }
+
+    // Отрисовка всего изображения разом
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    SetDIBitsToDevice(hdc, 0, 0, w, h, 0, 0, 0, h, pixels, &bmi, DIB_RGB_COLORS);
+
+    delete[] pixels;
+    delete sino;
+    ReleaseDC(hwnd, hdc);
+}
 void drawGraph(HWND hwnd, Phantom* phantom) {
     HDC hdc = GetDC(hwnd);
     int w = phantom->getW();
@@ -129,6 +191,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 50 + IMAGE_HEIGHT + 20,
                 BUTTON_WIDTH, BUTTON_HEIGHT,
                 hwnd, (HMENU)1, nullptr, nullptr
+            );
+
+            // Кнопка "Синограмма"
+            hwndBtnSinogram = CreateWindowW(
+                L"BUTTON", L"Синограмма",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                (WINDOW_WIDTH - IMAGE_WIDTH * 2 - 100) / 2 + IMAGE_WIDTH / 2 - BUTTON_WIDTH / 2 + 250,
+                50 + IMAGE_HEIGHT + 20,
+                BUTTON_WIDTH, BUTTON_HEIGHT,
+                hwnd, (HMENU)2, nullptr, nullptr
+            );
+
+            // Кнопка "График"
+            hwndBtnGraph = CreateWindowW(
+                L"BUTTON", L"График",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                (WINDOW_WIDTH - IMAGE_WIDTH * 2 - 100) / 2 + IMAGE_WIDTH / 2 - BUTTON_WIDTH / 2 + 500,
+                50 + IMAGE_HEIGHT + 20,
+                BUTTON_WIDTH, BUTTON_HEIGHT,
+                hwnd, (HMENU)3, nullptr, nullptr
             );
 
             // Параметры (справа от картинки)
@@ -220,6 +302,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 save_data(g_phantom);
                 save_image(g_phantom);
                 drawPhantom(hwndImage1, g_phantom);
+                drawGraph(hwndImage2, g_phantom);
+            }
+            // Кнопка "Синограмма"
+            else if (LOWORD(wParam) == 2) {
+                drawSinusogram(hwndImage2, g_phantom);
+            }
+            // Кнопка "График"
+            else if (LOWORD(wParam) == 3) {
                 drawGraph(hwndImage2, g_phantom);
             }
             break;
