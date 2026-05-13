@@ -34,7 +34,7 @@ void save_data(Phantom* phantom){
     fclose(f);
 }
 
-void save_image(Phantom* phantom){
+void save_phantom_image(Phantom* phantom){
     char filename[64];
     sprintf(filename, "phantoms/pics/pic_%d.bmp", time(0));
 

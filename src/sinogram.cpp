@@ -42,6 +42,15 @@ void Sinogram::set_phys(){
         this->angles[i] = i * D_A;
     }
 }
+int Sinogram::getM(){
+    return this->M;
+}
+int Sinogram::getN(){
+    return this->N;
+}
+double Sinogram::get_angles(){
+    return this->angles;
+}
 void Sinogram::set_sinogram(){
     double** data = this->phantom->get_phantom_data();
     int centerX = this->N / 2;
